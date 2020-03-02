@@ -4,22 +4,15 @@ import './Calculator.css'
 import Button from '../components/Button'
 import Display from '../components/Display'
 
-//cria-se o state fora para quando chamar a função
-// para limpar a caculadora ele voltar
-//para o state inicial
-
 const initialState = {
     displayValue: '0',
     clearDisplay: false,
     operation: null,
     values: [0, 0],
     current: 0
-    //current vai me dizer qual indice estou manipulando
-    // o valor 0 ou valor 1
 }
 
 export default class Calculator extends Component {
-    //clonando o state 
     state = { ...initialState }
 
     constructor(props) {
@@ -31,38 +24,64 @@ export default class Calculator extends Component {
     }
 
     clearMemory() {
-        //Voltando para o state inicial
         this.setState({ ...initialState })
     }
 
     setOperation(operation) {
-        console.log(operation)
+        //recebe a operaçao mudando o indice pra 1 e limpando
+        // o display
+        if (this.state.current === 0) {
+            this.setState({ operation, current: 1, clearDisplay: true })
+        } else {
+            //verificando se foi clicado no =
+            const equals = operation === '='
+            // pegando a operação que ja foi armazenada
+            const currentOperation = this.state.operation
+
+            const values = 
+            {...this.state.values}
+            //sempre que uma operação for executada será armazenada
+            // no indice zero e o indice 1 será zerado
+            //usando try por causa do eval , pode trocar
+            // o eval pow switch
+            try{
+                values[0] = eval(`${values[0]} ${currentOperation} ${values[1]}`)
+            } catch(e){
+                values[0] = this.state.values[0]
+            }
+            values[1] = 0
+
+            this.setState({
+                displayValue: values [0],
+                // se for equals acabo de concluir se for outra operação
+                //esse operador será setado como operation atual
+                operation: equals ? null : operation,
+                //se usuario colocar equals continua no indice atual
+                // se for outro operation muda o indice
+                current: equals ? 0 : 1,
+                //so limpa display se clicar em outra operation
+                clearDisplay: !equals,
+                //passando valores para substituir no state
+                values
+
+            })
+        }
     }
 
     addDigit(n) {
-        //se um numero ja tiver um ponto n pode adicionar outro
         if (n === '.' && this.state.displayValue.includes('.')) {
             return
         }
-        //Limpar o display para evitar os 0 a esquerda
         const clearDisplay = this.state.displayValue === '0'
             || this.state.clearDisplay
-        //se precisar limpare o display o valor current é vazio
-        // se não é o valor que de fato está no display   
         const currentValue = clearDisplay ? '' : this.state.displayValue 
-        //pegando o novo valor que vai colocar no display
-        //é o current + a variavel N que foi digitada
         const displayValue = currentValue + n  
-        // mudar o state do app 
         this.setState({ displayValue, clearDisplay: false })
 
         if (n!== '.') {
             const i = this.state.current
-            //convertendo displayValue parta floar e armazenando
-            // na variavel
             const newValue = parseFloat(displayValue)
             const values = { ...this.state.values}
-            //alterar o valor atual que está mechendo
             values[i] = newValue
             this.setState({ values })
             console.log(values)
@@ -73,7 +92,6 @@ export default class Calculator extends Component {
         return (
             <div className='calculator'>
                 <Display value={this.state.displayValue} />
-                {/*Fazendo o Display apontar para o State */}
                 <Button label='AC' click={this.clearMemory} triple />
                 <Button label='/' click={this.setOperation} operation />
                 <Button label='7' click={this.addDigit} /> 
